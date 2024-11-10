@@ -1,7 +1,7 @@
 # Unified Liquidity NFTs (UL-NFTs)
 
 <div align="center">
-<img src="/api/placeholder/800/200" alt="UL-NFTs Banner"/>
+<img src="./euclid1.png" alt="UL-NFTs Banner"/>
 </div>
 
 ## 🌟 Overview
@@ -98,7 +98,7 @@ _System Architecture Diagram_
 ## 🌊 Euclid Protocol Integration
 
 <div align="center">
-<img src="/api/placeholder/800/300" alt="Euclid Integration Flow"/>
+<img src="./euclid3.png" alt="Euclid Integration Flow"/>
 
 _Euclid Integration Flow_
 
@@ -198,7 +198,7 @@ cd frontend && npm install
 ## 🔗 Contract Interaction Flow
 
 <div align="center">
-<img src="/api/placeholder/800/400" alt="Contract Interaction Flow"/>
+<img src="./euclid2.png" alt="Contract Interaction Flow"/>
 
 _Smart Contract Interaction Flow_
 
