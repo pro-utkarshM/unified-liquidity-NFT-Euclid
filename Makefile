@@ -1,4 +1,4 @@
-# Variables
+# Paths
 CONTRACTS_DIR := contracts
 LIQUIDITY_WRAPPER := $(CONTRACTS_DIR)/liquidity-wrapper
 MARKETPLACE := $(CONTRACTS_DIR)/marketplace
@@ -7,6 +7,7 @@ UL_NFT_CORE := $(CONTRACTS_DIR)/ul-nft-core
 BUILD_DIR := target/wasm32-unknown-unknown/release
 SCRIPTS_DIR := scripts
 
+# Targets
 all: clean build deploy test
 
 build: build_liquidity_wrapper build_marketplace build_metadata_manager build_ul_nft_core
@@ -37,7 +38,7 @@ test:
 
 clean:
 	@echo "Cleaning build artifacts..."
-	cargo clean
+	cargo clean --manifest-path $(CONTRACTS_DIR)/Cargo.toml || true
 	rm -rf $(BUILD_DIR)
 
 .PHONY: all build deploy test clean build_liquidity_wrapper build_marketplace build_metadata_manager build_ul_nft_core
