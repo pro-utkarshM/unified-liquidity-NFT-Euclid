@@ -1,7 +1,7 @@
 # Unified Liquidity NFTs (UL-NFTs)
 
 <div align="center">
-<img src="./euclid1.png" alt="UL-NFTs Banner"/>
+<img src="./assets/euclid1.png" alt="UL-NFTs Banner"/>
 </div>
 
 ## 🌟 Overview
@@ -21,7 +21,7 @@ UL-NFTs (Unified Liquidity NFTs) is a groundbreaking DeFi project that tokenizes
 ```bash
 unified-liquidity-nfts/
 ├── .github/
-│   └── workflows/               # CI/CD workflows
+│   └── workflows/              # CI/CD workflows
 ├── contracts/
 │   ├── Cargo.toml              # Workspace manifest
 │   ├── ul-nft-core/            # Core NFT contract
@@ -48,13 +48,13 @@ unified-liquidity-nfts/
 │   ├── public/
 │   └── src/
 │       ├── components/         # React components
-│       ├── hooks/             # Custom hooks
-│       ├── services/          # API/blockchain services
-│       └── pages/             # Main application pages
+│       ├── hooks/              # Custom hooks
+│       ├── services/           # API/blockchain services
+│       └── pages/              # Main application pages
 ├── scripts/
-│   ├── deploy.ts              # Deployment scripts
-│   └── test.ts               # Test runners
-└── docs/                      # Additional documentation
+│   ├── deploy.ts               # Deployment scripts
+│   └── test.ts                 # Test runners
+└── docs/                       # Additional documentation
 ```
 
 ## 🔄 System Architecture
@@ -98,7 +98,7 @@ _System Architecture Diagram_
 ## 🌊 Euclid Protocol Integration
 
 <div align="center">
-<img src="./euclid3.png" alt="Euclid Integration Flow"/>
+<img src="./assets/euclid3.png" alt="Euclid Integration Flow"/>
 
 _Euclid Integration Flow_
 
@@ -198,7 +198,7 @@ cd frontend && npm install
 ## 🔗 Contract Interaction Flow
 
 <div align="center">
-<img src="./euclid2.png" alt="Contract Interaction Flow"/>
+<img src="./assets/euclid2.png" alt="Contract Interaction Flow"/>
 
 _Smart Contract Interaction Flow_
 
