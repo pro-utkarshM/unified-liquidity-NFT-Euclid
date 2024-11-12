@@ -1,7 +1,7 @@
 # Unified Liquidity NFTs (UL-NFTs)
 
 <div align="center">
-<img src="./euclid1.png" alt="UL-NFTs Banner"/>
+<img src="./assets/euclid1.png" alt="UL-NFTs Banner"/>
 </div>
 
 ## 🌟 Overview
@@ -60,7 +60,7 @@ unified-liquidity-nfts/
 ## 🔄 System Architecture
 
 <div align="center">
-<img src="./euclid1.png" alt="System Architecture"/>
+<img src="./assets/euclid1.png" alt="System Architecture"/>
 
 _System Architecture Diagram_
 
@@ -98,7 +98,7 @@ _System Architecture Diagram_
 ## 🌊 Euclid Protocol Integration
 
 <div align="center">
-<img src="./euclid3.png" alt="Euclid Integration Flow"/>
+<img src="./assets/euclid3.png" alt="Euclid Integration Flow"/>
 
 _Euclid Integration Flow_
 
@@ -132,7 +132,7 @@ _Euclid Integration Flow_
 ## ⚡ Archway Integration
 
 <div align="center">
-<img src="./euclid2.png" alt="Archway Integration"/>
+<img src="./assets/euclid2.png" alt="Archway Integration"/>
 
 _Archway Contract Architecture_
 
@@ -198,7 +198,7 @@ cd frontend && npm install
 ## 🔗 Contract Interaction Flow
 
 <div align="center">
-<img src="./euclid4.png" alt="Contract Interaction Flow"/>
+<img src="./assets/euclid4.png" alt="Contract Interaction Flow"/>
 
 _Smart Contract Interaction Flow_
 
