@@ -1,13 +1,15 @@
 [package]
 name = "liquidity-wrapper"
 version = "0.1.0"
+authors = ["Mrigesh Thakur", "Utkarsh Maurya"]
 edition = "2021"
-description = "Euclid Protocol integration for UL-NFTs"
+description = "Liquidity Wrapper Contract for Euclid Protocol Integration"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
+default = []
 library = []
 
 [dependencies]
