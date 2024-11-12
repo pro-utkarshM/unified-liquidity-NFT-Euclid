@@ -1,10 +1,7 @@
-// contracts/ul-nft-core/src/contract.rs
-
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
     StdResult, Uint128,
 };
-use cw721::{Cw721Execute, Cw721ReceiveMsg};
 use cw_storage_plus::{Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -253,4 +250,59 @@ fn query_tokens_by_owner(deps: Deps, owner: String) -> StdResult<Vec<String>> {
     Ok(OWNER_TOKENS
         .may_load(deps.storage, &owner)?
         .unwrap_or_default())
+}
+
+pub fn execute_approve(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    spender: String,
+    token_id: String,
+) -> StdResult<Response> {
+    let spender_addr = deps.api.addr_validate(&spender)?;
+
+    // Load and validate token
+    let mut token = TOKENS.load(deps.storage, &token_id)?;
+    if token.owner != info.sender {
+        return Err(StdError::generic_err("Unauthorized"));
+    }
+
+    // Set approval
+    token.approved = Some(spender_addr.clone());
+    TOKENS.save(deps.storage, &token_id, &token)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "approve")
+        .add_attribute("token_id", token_id)
+        .add_attribute("spender", spender))
+}
+
+pub fn execute_burn(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    token_id: String,
+) -> StdResult<Response> {
+    // Load and validate token
+    let token = TOKENS.load(deps.storage, &token_id)?;
+    if token.owner != info.sender {
+        return Err(StdError::generic_err("Unauthorized"));
+    }
+
+    // Remove token
+    TOKENS.remove(deps.storage, &token_id);
+
+    // Update owner tokens
+    let mut owner_tokens = OWNER_TOKENS.load(deps.storage, &info.sender)?;
+    owner_tokens.retain(|t| t != &token_id);
+    OWNER_TOKENS.save(deps.storage, &info.sender, &owner_tokens)?;
+
+    // Update total supply
+    let mut total_supply = TOTAL_SUPPLY.load(deps.storage)?;
+    total_supply -= 1;
+    TOTAL_SUPPLY.save(deps.storage, &total_supply)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "burn")
+        .add_attribute("token_id", token_id))
 }

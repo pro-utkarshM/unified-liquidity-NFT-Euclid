@@ -1,6 +1,36 @@
 [package]
 name = "metadata-manager"
 version = "0.1.0"
+authors = ["Mrigesh Thakur", "Utkarsh Maurya"]
 edition = "2021"
+description = "Metadata Manager Contract for UL-NFTs - Handles NFT metadata and attributes"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+library = []
 
 [dependencies]
+cosmwasm-std = { version = "2.1.4", features = ["staking"] }
+cw-storage-plus = "2.0.0"
+cw2 = "2.0.0"
+schemars = "0.8.11"
+serde = { version = "1.0.152", default-features = false, features = ["derive"] }
+thiserror = "2.0.3"
+ul-nft-core = { path = "../ul-nft-core" }
+
+[dev-dependencies]
+cosmwasm-schema = "2.1.4"
+cw-multi-test = "2.2.0"
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true

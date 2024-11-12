@@ -29,4 +29,10 @@ pub enum ContractError {
 
     #[error("Updater not found")]
     UpdaterNotFound {},
+
+    #[error("Cannot remove the last updater")]
+    CannotRemoveLastUpdater {},
+
+    #[error("Duplicate updater address")]
+    DuplicateUpdater {},
 }

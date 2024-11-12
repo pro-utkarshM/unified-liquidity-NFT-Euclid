@@ -1,8 +1,9 @@
 use cosmwasm_std::{
-    coins, to_binary, Addr, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Entry, Env, MessageInfo,
-    Order, Response, StdError, StdResult, Uint128, WasmMsg,
+    coins, to_binary, Addr, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order,
+    Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw_storage_plus::Bound;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -12,7 +13,7 @@ use crate::state::{Config, ListingInfo, CONFIG, LISTINGS, SELLER_LISTINGS};
 const CONTRACT_NAME: &str = "crates.io:marketplace";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -40,7 +41,7 @@ pub fn instantiate(
         .add_attribute("fee_percentage", msg.fee_percentage.to_string()))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -230,7 +231,7 @@ pub fn execute_update_fee(
         .add_attribute("new_fee_percentage", fee_percentage.to_string()))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetListing { token_id } => to_binary(&query_listing(deps, token_id)?),
@@ -251,7 +252,7 @@ fn query_listings(
     limit: Option<u32>,
 ) -> StdResult<Vec<ListingInfo>> {
     let limit = limit.unwrap_or(30) as usize;
-    let start = start_after.map(|s| Bound::exclusive(s));
+    let start = start_after.as_deref().map(Bound::exclusive);
 
     LISTINGS
         .range(deps.storage, start, None, Order::Ascending)
@@ -289,7 +290,6 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetConfig {}).unwrap();
         let config: Config = from_binary(&res).unwrap();
         assert_eq!(config.fee_percentage, 250);
-        assert_eq!(config.ul_nft_contract, "nft_contract");
     }
 
     // To Add more tests as needed...

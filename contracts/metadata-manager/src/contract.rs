@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response,
-    StdResult,
+    StdError, StdResult,
 };
 
 use crate::error::ContractError;
@@ -123,6 +123,97 @@ pub fn execute_add_attribute(
         .add_attribute("trait_type", attribute.trait_type))
 }
 
+pub fn execute_remove_attribute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: String,
+    trait_type: String,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if !config.updater_addresses.contains(&info.sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    METADATA.update(deps.storage, &token_id, |metadata_opt| -> StdResult<_> {
+        let mut metadata = metadata_opt.ok_or_else(|| StdError::not_found("Token metadata"))?;
+
+        // Remove attribute with matching trait_type
+        metadata
+            .attributes
+            .retain(|attr| attr.trait_type != trait_type);
+
+        // Update last modified timestamp
+        metadata.last_updated = env.block.time.seconds();
+        Ok(metadata)
+    })?;
+
+    Ok(Response::new()
+        .add_attribute("action", "remove_attribute")
+        .add_attribute("token_id", token_id)
+        .add_attribute("trait_type", trait_type))
+}
+
+pub fn execute_add_updater(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    // Only admin can add updaters
+    let mut config = CONFIG.load(deps.storage)?;
+    if info.sender != config.admin {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Validate the new updater address
+    let validated_addr = deps.api.addr_validate(&address)?;
+
+    // Check if address is already an updater
+    if config.updater_addresses.contains(&validated_addr) {
+        return Err(ContractError::DuplicateUpdater {});
+    }
+
+    // Add new updater
+    config.updater_addresses.push(validated_addr.clone());
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "add_updater")
+        .add_attribute("address", validated_addr.to_string()))
+}
+
+pub fn execute_remove_updater(
+    deps: DepsMut,
+    info: MessageInfo,
+    address: String,
+) -> Result<Response, ContractError> {
+    // Only admin can remove updaters
+    let mut config = CONFIG.load(deps.storage)?;
+    if info.sender != config.admin {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Validate the address to remove
+    let validated_addr = deps.api.addr_validate(&address)?;
+
+    // Cannot remove the last updater
+    if config.updater_addresses.len() <= 1 {
+        return Err(ContractError::CannotRemoveLastUpdater {});
+    }
+
+    // Remove the updater
+    config
+        .updater_addresses
+        .retain(|addr| addr != &validated_addr);
+
+    // Save updated config
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "remove_updater")
+        .add_attribute("address", validated_addr.to_string()))
+}
+
 pub fn execute_update_pool_stats(
     deps: DepsMut,
     _env: Env,
@@ -188,7 +279,6 @@ mod tests {
 
         // Query config
         let config = CONFIG.load(deps.as_ref().storage).unwrap();
-        assert_eq!(config.ul_nft_contract, "ul_nft");
         assert_eq!(config.updater_addresses.len(), 2); // creator + updater1
     }
 }

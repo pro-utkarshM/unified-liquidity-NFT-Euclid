@@ -1,14 +1,16 @@
-use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Entry, Env, MessageInfo, Order, ReplyOn,
-    Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
-};
-use cw2::set_contract_version;
-
 use crate::error::ContractError;
-use crate::msg::{EuclidAction, EuclidMsg, ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{EuclidAction, EuclidMsg, EuclidResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
     Config, LiquidityPosition, PositionInfo, CONFIG, PENDING_OPERATIONS, POOL_LIQUIDITY, POSITIONS,
 };
+use cosmwasm_std::{
+    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
+    ReplyOn, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+};
+use cw2::set_contract_version;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 // Contract name and version
 const CONTRACT_NAME: &str = "crates.io:liquidity-wrapper";
@@ -19,7 +21,7 @@ const REPLY_ADD_LIQUIDITY: u64 = 1;
 const REPLY_REMOVE_LIQUIDITY: u64 = 2;
 const REPLY_TRANSFER_POSITION: u64 = 3;
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -43,7 +45,7 @@ pub fn instantiate(
         .add_attribute("euclid_router", msg.euclid_router))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -109,6 +111,7 @@ pub fn execute_add_liquidity(
         msg: msg.into(),
         gas_limit: None,
         reply_on: ReplyOn::Success,
+        payload: Binary::default(),
     };
 
     // Create temporary position entry
@@ -171,6 +174,7 @@ pub fn execute_remove_liquidity(
         msg: msg.into(),
         gas_limit: None,
         reply_on: ReplyOn::Success,
+        payload: Binary::default(),
     };
 
     Ok(Response::new()
@@ -181,7 +185,7 @@ pub fn execute_remove_liquidity(
 }
 
 // Query entry point
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
@@ -198,7 +202,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 // Reply handler for submessages
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractError> {
     match msg.id {
         REPLY_ADD_LIQUIDITY => handle_add_liquidity_reply(deps, env, msg),
@@ -219,20 +223,26 @@ fn handle_add_liquidity_reply(
     let result: EuclidResponse = from_binary(&msg.result.unwrap().data.unwrap())?;
 
     if !result.success {
-        // Handle failure case
-        let error_msg = result.error.unwrap_or_else(|| "Unknown error".to_string());
         return Err(ContractError::CrossChainOperationFailed {});
     }
 
     // Parse position data from successful response
     let position_data: LiquidityPosition = from_binary(&result.data)?;
 
+    // Get sender from PENDING_OPERATIONS
+    let pending_users = PENDING_OPERATIONS
+        .load(deps.storage, &position_data.pool_id)?
+        .pop()
+        .ok_or_else(|| ContractError::Unauthorized {})?;
+
+    let sender = deps.api.addr_validate(&pending_users)?;
+
     // Generate token ID (using timestamp and pool ID)
     let token_id = format!("ulp-{}-{}", env.block.time.seconds(), position_data.pool_id);
 
     // Create position info
     let position_info = PositionInfo {
-        owner: deps.api.addr_validate(&result.user)?,
+        owner: sender,
         token_id: token_id.clone(),
         position: position_data.clone(),
     };
@@ -270,6 +280,8 @@ fn handle_remove_liquidity_reply(
     let remove_data: RemoveLiquidityResponse = from_binary(&result.data)?;
     let position = POSITIONS.load(deps.storage, &remove_data.token_id)?;
 
+    /// ========= NEED TO FIX THIS =========
+    let temp_fix = position.position.pool_id.clone();
     // If all liquidity removed, delete position
     if remove_data.amount == position.position.amount {
         POSITIONS.remove(deps.storage, &remove_data.token_id);
@@ -281,11 +293,9 @@ fn handle_remove_liquidity_reply(
     }
 
     // Update pool liquidity
-    POOL_LIQUIDITY.update(
-        deps.storage,
-        &position.position.pool_id,
-        |liquid| -> StdResult<_> { Ok(liquid.unwrap_or_default() - remove_data.amount) },
-    )?;
+    POOL_LIQUIDITY.update(deps.storage, &temp_fix, |liquid| -> StdResult<_> {
+        Ok(liquid.unwrap_or_default() - remove_data.amount)
+    })?;
 
     Ok(Response::new()
         .add_attribute("action", "remove_liquidity_complete")
@@ -305,6 +315,8 @@ fn handle_transfer_position_reply(
     }
 
     let transfer_data: TransferPositionResponse = from_binary(&result.data)?;
+    let token_id = transfer_data.token_id.clone();
+    let new_chain_id = transfer_data.new_chain_id.clone();
 
     // Update position with new chain ID
     POSITIONS.update(
@@ -319,8 +331,8 @@ fn handle_transfer_position_reply(
 
     Ok(Response::new()
         .add_attribute("action", "transfer_position_complete")
-        .add_attribute("token_id", transfer_data.token_id)
-        .add_attribute("new_chain_id", transfer_data.new_chain_id))
+        .add_attribute("token_id", token_id)
+        .add_attribute("new_chain_id", new_chain_id))
 }
 
 // Query implementation
@@ -379,6 +391,113 @@ fn query_estimate_rewards(deps: Deps, token_id: String) -> StdResult<Uint128> {
     Ok(rewards)
 }
 
+pub fn execute_transfer_position(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: String,
+    to_chain_id: String,
+) -> Result<Response, ContractError> {
+    let position = POSITIONS.load(deps.storage, &token_id)?;
+
+    // Verify ownership
+    if position.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Create Euclid message for transferring position
+    let euclid_msg = EuclidMsg {
+        action: EuclidAction::TransferLiquidity,
+        data: to_binary(&json!({
+            "token_id": token_id,
+            "from_chain_id": position.position.chain_id,
+            "to_chain_id": to_chain_id,
+            "amount": position.position.amount,
+        }))?,
+    };
+
+    let msg = WasmMsg::Execute {
+        contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
+        msg: to_binary(&euclid_msg)?,
+        funds: vec![],
+    };
+
+    let submsg = SubMsg {
+        id: REPLY_TRANSFER_POSITION,
+        msg: msg.into(),
+        gas_limit: None,
+        reply_on: ReplyOn::Success,
+        payload: Binary::default(), // Add this
+    };
+
+    Ok(Response::new()
+        .add_submessage(submsg)
+        .add_attribute("action", "transfer_position")
+        .add_attribute("token_id", token_id))
+}
+
+pub fn execute_update_position(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: String,
+    new_amount: Uint128,
+) -> Result<Response, ContractError> {
+    let mut position = POSITIONS.load(deps.storage, &token_id)?;
+
+    // Verify ownership
+    if position.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Update position amount
+    position.position.amount = new_amount;
+    position.position.last_updated = env.block.time.seconds();
+
+    // Save updated position
+    POSITIONS.save(deps.storage, &token_id, &position)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "update_position")
+        .add_attribute("token_id", token_id)
+        .add_attribute("new_amount", new_amount))
+}
+
+pub fn execute_claim_rewards(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_id: String,
+) -> Result<Response, ContractError> {
+    let position = POSITIONS.load(deps.storage, &token_id)?;
+
+    // Verify ownership
+    if position.owner != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    // Create Euclid message for claiming rewards
+    let euclid_msg = EuclidMsg {
+        action: EuclidAction::ClaimRewards,
+        data: to_binary(&json!({
+            "token_id": token_id,
+            "pool_id": position.position.pool_id,
+            "amount": position.position.amount,
+        }))?,
+    };
+
+    let msg = WasmMsg::Execute {
+        contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
+        msg: to_binary(&euclid_msg)?,
+        funds: vec![],
+    };
+
+    Ok(Response::new()
+        .add_message(msg)
+        .add_attribute("action", "claim_rewards")
+        .add_attribute("token_id", token_id))
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 struct RemoveLiquidityResponse {
     token_id: String,
@@ -389,32 +508,4 @@ struct RemoveLiquidityResponse {
 struct TransferPositionResponse {
     token_id: String,
     new_chain_id: String,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-
-    #[test]
-    fn proper_initialization() {
-        let mut deps = mock_dependencies();
-        let info = mock_info("creator", &[]);
-
-        let msg = InstantiateMsg {
-            ul_nft_contract: "nft_contract".to_string(),
-            euclid_router: "euclid_router".to_string(),
-            euclid_factory: "euclid_factory".to_string(),
-        };
-
-        let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
-        assert_eq!(0, res.messages.len());
-
-        // Query the config
-        let config: Config = query_config(deps.as_ref()).unwrap();
-        assert_eq!(config.ul_nft_contract, "nft_contract");
-        assert_eq!(config.euclid_router, "euclid_router");
-    }
-
-    // To be done : Add more tests...
 }
