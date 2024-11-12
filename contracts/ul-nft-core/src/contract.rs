@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
     StdResult, Uint128,
 };
 use cw_storage_plus::{Item, Map};
@@ -133,10 +133,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetToken { token_id } => to_binary(&query_token(deps, token_id)?),
-        QueryMsg::GetTokensByOwner { owner } => to_binary(&query_tokens_by_owner(deps, owner)?),
-        QueryMsg::Config {} => to_binary(&CONFIG.load(deps.storage)?),
-        QueryMsg::TotalSupply {} => to_binary(&TOTAL_SUPPLY.load(deps.storage)?),
+        QueryMsg::GetToken { token_id } => to_json_binary(&query_token(deps, token_id)?),
+        QueryMsg::GetTokensByOwner { owner } => to_json_binary(&query_tokens_by_owner(deps, owner)?),
+        QueryMsg::Config {} => to_json_binary(&CONFIG.load(deps.storage)?),
+        QueryMsg::TotalSupply {} => to_json_binary(&TOTAL_SUPPLY.load(deps.storage)?),
     }
 }
 

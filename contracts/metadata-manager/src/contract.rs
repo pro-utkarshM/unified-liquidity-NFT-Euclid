@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    attr, entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response,
+    attr, entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response,
     StdError, StdResult,
 };
 
@@ -236,10 +236,10 @@ pub fn execute_update_pool_stats(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetMetadata { token_id } => to_binary(&query_metadata(deps, token_id)?),
-        QueryMsg::GetPoolStats { pool_id } => to_binary(&query_pool_stats(deps, pool_id)?),
-        QueryMsg::GetConfig {} => to_binary(&CONFIG.load(deps.storage)?),
-        QueryMsg::GetUpdaters {} => to_binary(&query_updaters(deps)?),
+        QueryMsg::GetMetadata { token_id } => to_json_binary(&query_metadata(deps, token_id)?),
+        QueryMsg::GetPoolStats { pool_id } => to_json_binary(&query_pool_stats(deps, pool_id)?),
+        QueryMsg::GetConfig {} => to_json_binary(&CONFIG.load(deps.storage)?),
+        QueryMsg::GetUpdaters {} => to_json_binary(&query_updaters(deps)?),
     }
 }
 

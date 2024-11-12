@@ -4,7 +4,7 @@ use crate::state::{
     Config, LiquidityPosition, PositionInfo, CONFIG, PENDING_OPERATIONS, POOL_LIQUIDITY, POSITIONS,
 };
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
+    from_json, to_json_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
     ReplyOn, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -90,7 +90,7 @@ pub fn execute_add_liquidity(
     // Create Euclid message for adding liquidity
     let euclid_msg = EuclidMsg {
         action: EuclidAction::AddLiquidity,
-        data: to_binary(&json!({
+        data: to_json_binary(&json!({
             "pool_id": pool_id,
             "chain_id": chain_id,
             "token_pair": token_pair,
@@ -102,7 +102,7 @@ pub fn execute_add_liquidity(
     // Create submessage for Euclid Router
     let msg = WasmMsg::Execute {
         contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
-        msg: to_binary(&euclid_msg)?,
+        msg: to_json_binary(&euclid_msg)?,
         funds: info.funds,
     };
 
@@ -155,7 +155,7 @@ pub fn execute_remove_liquidity(
     // Create Euclid message for removing liquidity
     let euclid_msg = EuclidMsg {
         action: EuclidAction::RemoveLiquidity,
-        data: to_binary(&json!({
+        data: to_json_binary(&json!({
             "pool_id": position.position.pool_id,
             "amount": remove_amount,
             "token_id": token_id,
@@ -165,7 +165,7 @@ pub fn execute_remove_liquidity(
     // Create submessage for Euclid Router
     let msg = WasmMsg::Execute {
         contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
-        msg: to_binary(&euclid_msg)?,
+        msg: to_json_binary(&euclid_msg)?,
         funds: vec![],
     };
 
@@ -188,15 +188,15 @@ pub fn execute_remove_liquidity(
 #[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
-        QueryMsg::GetPosition { token_id } => to_binary(&query_position(deps, token_id)?),
-        QueryMsg::GetPoolPositions { pool_id } => to_binary(&query_pool_positions(deps, pool_id)?),
+        QueryMsg::GetConfig {} => to_json_binary(&query_config(deps)?),
+        QueryMsg::GetPosition { token_id } => to_json_binary(&query_position(deps, token_id)?),
+        QueryMsg::GetPoolPositions { pool_id } => to_json_binary(&query_pool_positions(deps, pool_id)?),
         QueryMsg::GetPendingOperations { token_id } => {
-            to_binary(&query_pending_operations(deps, token_id)?)
+            to_json_binary(&query_pending_operations(deps, token_id)?)
         }
-        QueryMsg::GetPoolLiquidity { pool_id } => to_binary(&query_pool_liquidity(deps, pool_id)?),
+        QueryMsg::GetPoolLiquidity { pool_id } => to_json_binary(&query_pool_liquidity(deps, pool_id)?),
         QueryMsg::EstimateRewards { token_id } => {
-            to_binary(&query_estimate_rewards(deps, token_id)?)
+            to_json_binary(&query_estimate_rewards(deps, token_id)?)
         }
     }
 }
@@ -220,14 +220,14 @@ fn handle_add_liquidity_reply(
     env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_binary(&msg.result.unwrap().data.unwrap())?;
+    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
     }
 
     // Parse position data from successful response
-    let position_data: LiquidityPosition = from_binary(&result.data)?;
+    let position_data: LiquidityPosition = from_json(&result.data)?;
 
     // Get sender from PENDING_OPERATIONS
     let pending_users = PENDING_OPERATIONS
@@ -271,13 +271,13 @@ fn handle_remove_liquidity_reply(
     _env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_binary(&msg.result.unwrap().data.unwrap())?;
+    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
     }
 
-    let remove_data: RemoveLiquidityResponse = from_binary(&result.data)?;
+    let remove_data: RemoveLiquidityResponse = from_json(&result.data)?;
     let position = POSITIONS.load(deps.storage, &remove_data.token_id)?;
 
     /// ========= NEED TO FIX THIS =========
@@ -308,13 +308,13 @@ fn handle_transfer_position_reply(
     _env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_binary(&msg.result.unwrap().data.unwrap())?;
+    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
     }
 
-    let transfer_data: TransferPositionResponse = from_binary(&result.data)?;
+    let transfer_data: TransferPositionResponse = from_json(&result.data)?;
     let token_id = transfer_data.token_id.clone();
     let new_chain_id = transfer_data.new_chain_id.clone();
 
@@ -376,7 +376,7 @@ fn query_estimate_rewards(deps: Deps, token_id: String) -> StdResult<Uint128> {
     // Create Euclid query message for rewards estimation
     let euclid_query = EuclidMsg {
         action: EuclidAction::ClaimRewards,
-        data: to_binary(&json!({
+        data: to_json_binary(&json!({
             "pool_id": position.position.pool_id,
             "amount": position.position.amount,
             "duration": position.position.last_updated,
@@ -408,7 +408,7 @@ pub fn execute_transfer_position(
     // Create Euclid message for transferring position
     let euclid_msg = EuclidMsg {
         action: EuclidAction::TransferLiquidity,
-        data: to_binary(&json!({
+        data: to_json_binary(&json!({
             "token_id": token_id,
             "from_chain_id": position.position.chain_id,
             "to_chain_id": to_chain_id,
@@ -418,7 +418,7 @@ pub fn execute_transfer_position(
 
     let msg = WasmMsg::Execute {
         contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
-        msg: to_binary(&euclid_msg)?,
+        msg: to_json_binary(&euclid_msg)?,
         funds: vec![],
     };
 
@@ -479,7 +479,7 @@ pub fn execute_claim_rewards(
     // Create Euclid message for claiming rewards
     let euclid_msg = EuclidMsg {
         action: EuclidAction::ClaimRewards,
-        data: to_binary(&json!({
+        data: to_json_binary(&json!({
             "token_id": token_id,
             "pool_id": position.position.pool_id,
             "amount": position.position.amount,
@@ -488,7 +488,7 @@ pub fn execute_claim_rewards(
 
     let msg = WasmMsg::Execute {
         contract_addr: CONFIG.load(deps.storage)?.euclid_router.to_string(),
-        msg: to_binary(&euclid_msg)?,
+        msg: to_json_binary(&euclid_msg)?,
         funds: vec![],
     };
 

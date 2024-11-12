@@ -7,7 +7,7 @@ description = "Unified Liquidity NFT Core Contract - Tokenized representation of
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-
+  
 [features]
 library = []
 

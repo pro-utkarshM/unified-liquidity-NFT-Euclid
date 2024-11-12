@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    coins, to_binary, Addr, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order,
+    coins, to_json_binary, Addr, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order,
     Response, StdError, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -165,7 +165,7 @@ pub fn execute_buy_nft(
     // Create transfer NFT message
     let transfer_nft_msg = WasmMsg::Execute {
         contract_addr: config.ul_nft_contract.to_string(),
-        msg: to_binary(&cw721::Cw721ExecuteMsg::TransferNft {
+        msg: to_json_binary(&cw721::Cw721ExecuteMsg::TransferNft {
             recipient: info.sender.to_string(),
             token_id: token_id.clone(),
         })?,
@@ -234,11 +234,11 @@ pub fn execute_update_fee(
 #[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetListing { token_id } => to_binary(&query_listing(deps, token_id)?),
+        QueryMsg::GetListing { token_id } => to_json_binary(&query_listing(deps, token_id)?),
         QueryMsg::GetListings { start_after, limit } => {
-            to_binary(&query_listings(deps, start_after, limit)?)
+            to_json_binary(&query_listings(deps, start_after, limit)?)
         }
-        QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
+        QueryMsg::GetConfig {} => to_json_binary(&query_config(deps)?),
     }
 }
 
@@ -272,7 +272,7 @@ fn query_config(deps: Deps) -> StdResult<Config> {
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary};
+    use cosmwasm_std::{coins, from_json};
 
     #[test]
     fn proper_initialization() {
@@ -288,7 +288,7 @@ mod tests {
 
         // Query the config
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetConfig {}).unwrap();
-        let config: Config = from_binary(&res).unwrap();
+        let config: Config = from_json(&res).unwrap();
         assert_eq!(config.fee_percentage, 250);
     }
 
