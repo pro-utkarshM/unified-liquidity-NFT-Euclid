@@ -60,7 +60,7 @@ unified-liquidity-nfts/
 ## 🔄 System Architecture
 
 <div align="center">
-<img src="/api/placeholder/800/400" alt="System Architecture"/>
+<img src="./euclid1.png" alt="System Architecture"/>
 
 _System Architecture Diagram_
 
@@ -132,7 +132,7 @@ _Euclid Integration Flow_
 ## ⚡ Archway Integration
 
 <div align="center">
-<img src="/api/placeholder/800/300" alt="Archway Integration"/>
+<img src="./euclid2.png" alt="Archway Integration"/>
 
 _Archway Contract Architecture_
 
@@ -198,7 +198,7 @@ cd frontend && npm install
 ## 🔗 Contract Interaction Flow
 
 <div align="center">
-<img src="./euclid2.png" alt="Contract Interaction Flow"/>
+<img src="./euclid4.png" alt="Contract Interaction Flow"/>
 
 _Smart Contract Interaction Flow_
 
