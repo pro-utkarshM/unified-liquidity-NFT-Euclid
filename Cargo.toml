@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.dependencies]
-cosmwasm-std = { version = "2.1.4", default-features = false, features = [
+cosmwasm-std = { version = "1.5.8", default-features = false, features = [
     "staking",
 ] }
 cosmwasm-schema = "2.1.4"
@@ -21,6 +21,7 @@ cw721-base = { version = "0.18.0", features = ["library"] }
 schemars = "0.8.11"
 serde = { version = "1.0.152", default-features = false, features = ["derive"] }
 thiserror = "2.0.3"
+
 
 [profile.release]
 opt-level = 3

@@ -1035,7 +1035,7 @@ name = "liquidity-wrapper"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema 2.1.4",
- "cosmwasm-std 2.1.4",
+ "cosmwasm-std 1.5.8",
  "cw-multi-test",
  "cw-storage-plus 2.0.0",
  "cw2 2.0.0",
@@ -1052,7 +1052,7 @@ name = "marketplace"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema 2.1.4",
- "cosmwasm-std 2.1.4",
+ "cosmwasm-std 1.5.8",
  "cw-multi-test",
  "cw-storage-plus 2.0.0",
  "cw2 2.0.0",
@@ -1074,7 +1074,7 @@ name = "metadata-manager"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema 2.1.4",
- "cosmwasm-std 2.1.4",
+ "cosmwasm-std 1.5.8",
  "cw-multi-test",
  "cw-storage-plus 2.0.0",
  "cw2 2.0.0",
@@ -1525,7 +1525,7 @@ name = "ul-nft-core"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema 2.1.4",
- "cosmwasm-std 2.1.4",
+ "cosmwasm-std 1.5.8",
  "cw-multi-test",
  "cw-storage-plus 2.0.0",
  "cw2 2.0.0",
