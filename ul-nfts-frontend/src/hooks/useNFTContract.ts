@@ -1,51 +1,62 @@
 import { useArchwayClient } from "./useArchwayClient";
 import { useState } from "react";
+import { CONTRACT_ADDRESSES } from "../services/contracts";
+import { LiquidityPosition, NFTMetadata } from "../services/types";
 
 export function useNFTContract() {
   const { client, address } = useArchwayClient();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const mintNFT = async (liquidityPositions) => {
-    if (!client || !address) return;
+  const mintNFT = async (positions: LiquidityPosition[]) => {
+    if (!client || !address) throw new Error("Wallet not connected");
 
     setLoading(true);
+    setError(null);
+
     try {
       const result = await client.execute(
         address,
-        process.env.NEXT_PUBLIC_UL_NFT_ADDRESS!,
+        CONTRACT_ADDRESSES.UL_NFT,
         {
           mint: {
-            positions: liquidityPositions,
+            positions,
             token_uri: null,
           },
         },
         "auto"
       );
       return result;
-    } catch (error) {
-      console.error("Mint error:", error);
-      throw error;
+    } catch (err) {
+      console.error("Mint error:", err);
+      setError(err instanceof Error ? err.message : "Failed to mint NFT");
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const queryNFT = async (tokenId: string) => {
-    if (!client) return null;
+  const getUserNFTs = async (userAddress: string): Promise<NFTMetadata[]> => {
+    if (!client) throw new Error("Client not initialized");
 
     try {
       const result = await client.queryContractSmart(
-        process.env.NEXT_PUBLIC_UL_NFT_ADDRESS!,
+        CONTRACT_ADDRESSES.UL_NFT,
         {
-          get_token: { token_id: tokenId },
+          get_tokens_by_owner: { owner: userAddress },
         }
       );
-      return result;
-    } catch (error) {
-      console.error("Query error:", error);
-      return null;
+      return result.tokens;
+    } catch (err) {
+      console.error("Query error:", err);
+      throw err;
     }
   };
 
-  return { mintNFT, queryNFT, loading };
+  return {
+    mintNFT,
+    getUserNFTs,
+    loading,
+    error,
+  };
 }

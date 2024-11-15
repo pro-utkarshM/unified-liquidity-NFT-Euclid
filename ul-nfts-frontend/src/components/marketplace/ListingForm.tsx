@@ -1,48 +1,60 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Input } from '../shared/Input';
+import { Button } from '../shared/Button';
 import { useMarketplace } from '../../hooks/useMarketplace';
 
 interface ListingFormProps {
     tokenId: string;
     onSuccess?: () => void;
+    onCancel?: () => void;
 }
 
-export const ListingForm: React.FC<ListingFormProps> = ({ tokenId, onSuccess }) => {
+export const ListingForm: React.FC<ListingFormProps> = ({
+    tokenId,
+    onSuccess,
+    onCancel
+}) => {
     const [price, setPrice] = useState('');
     const { createListing, loading } = useMarketplace();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         try {
             await createListing(tokenId, price);
-            if (onSuccess) onSuccess();
+            onSuccess?.();
         } catch (error) {
-            console.error('Listing error:', error);
+            console.error('Failed to create listing:', error);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-300">
-                    Price (ARCH)
-                </label>
-                <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="mt-1 block w-full bg-dark rounded-md border-gray-700"
-                    required
-                />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <Input
+                label="Price (ARCH)"
+                type="number"
+                min="0"
+                step="0.000001"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="Enter price in ARCH"
+                required
+            />
 
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded"
-            >
-                {loading ? 'Creating Listing...' : 'List NFT'}
-            </button>
+            <div className="flex justify-end space-x-4">
+                <Button
+                    variant="outline"
+                    onClick={onCancel}
+                    disabled={loading}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    type="submit"
+                    loading={loading}
+                >
+                    Create Listing
+                </Button>
+            </div>
         </form>
     );
 };
