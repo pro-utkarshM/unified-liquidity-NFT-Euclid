@@ -35,7 +35,7 @@ async function deploy() {
 
     const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
       process.env.MNEMONIC,
-      { prefix: "archway" },
+      { prefix: "archway" }
     );
 
     const [account] = await wallet.getAccounts();
@@ -43,7 +43,7 @@ async function deploy() {
 
     const client = await SigningArchwayClient.connectWithSigner(
       RPC_ENDPOINT,
-      wallet,
+      wallet
     );
 
     let config: DeploymentConfig = {
@@ -55,7 +55,7 @@ async function deploy() {
     try {
       const existingConfig = readFileSync(
         path.join(__dirname, `../config/deployment.${NETWORK}.json`),
-        "utf-8",
+        "utf-8"
       );
       config = JSON.parse(existingConfig);
     } catch (error) {
@@ -65,13 +65,13 @@ async function deploy() {
     // 1. Deploy Core NFT Contract
     console.log("Deploying UL-NFT Core contract...");
     const ulNftWasm = readFileSync(
-      path.join(__dirname, "../artifacts/ul_nft_core-aarch64.wasm"),
+      path.join(__dirname, "../artifacts/ul_nft_core-aarch64.wasm")
     );
     const ulNftResult = await client.upload(
       account.address,
       ulNftWasm,
       "auto",
-      "UL-NFT Core Upload",
+      "UL-NFT Core Upload"
     );
     console.log(`UL-NFT Core uploaded with code ID: ${ulNftResult.codeId}`);
     config.contracts.ulNft = { codeId: ulNftResult.codeId };
@@ -79,32 +79,32 @@ async function deploy() {
     // 2. Deploy Marketplace Contract
     console.log("Deploying Marketplace contract...");
     const marketplaceWasm = readFileSync(
-      path.join(__dirname, "../artifacts/marketplace-aarch64.wasm"),
+      path.join(__dirname, "../artifacts/marketplace-aarch64.wasm")
     );
     const marketplaceResult = await client.upload(
       account.address,
       marketplaceWasm,
       "auto",
-      "Marketplace Upload",
+      "Marketplace Upload"
     );
     console.log(
-      `Marketplace uploaded with code ID: ${marketplaceResult.codeId}`,
+      `Marketplace uploaded with code ID: ${marketplaceResult.codeId}`
     );
     config.contracts.marketplace = { codeId: marketplaceResult.codeId };
 
     // 3. Deploy Liquidity Wrapper Contract
     console.log("Deploying Liquidity Wrapper contract...");
     const wrapperWasm = readFileSync(
-      path.join(__dirname, "../artifacts/liquidity_wrapper-aarch64.wasm"),
+      path.join(__dirname, "../artifacts/liquidity_wrapper-aarch64.wasm")
     );
     const wrapperResult = await client.upload(
       account.address,
       wrapperWasm,
       "auto",
-      "Liquidity Wrapper Upload",
+      "Liquidity Wrapper Upload"
     );
     console.log(
-      `Liquidity Wrapper uploaded with code ID: ${wrapperResult.codeId}`,
+      `Liquidity Wrapper uploaded with code ID: ${wrapperResult.codeId}`
     );
     config.contracts.liquidityWrapper = { codeId: wrapperResult.codeId };
 
@@ -120,11 +120,11 @@ async function deploy() {
       },
       "UL-NFT Core v1",
       "auto",
-      { admin: account.address },
+      { admin: account.address }
     );
     config.contracts.ulNft.address = ulNftInstance.contractAddress;
     console.log(
-      `UL-NFT Core instantiated at: ${ulNftInstance.contractAddress}`,
+      `UL-NFT Core instantiated at: ${ulNftInstance.contractAddress}`
     );
 
     // 5. Instantiate Marketplace Contract
@@ -138,11 +138,11 @@ async function deploy() {
       },
       "UL-NFT Marketplace v1",
       "auto",
-      { admin: account.address },
+      { admin: account.address }
     );
     config.contracts.marketplace.address = marketplaceInstance.contractAddress;
     console.log(
-      `Marketplace instantiated at: ${marketplaceInstance.contractAddress}`,
+      `Marketplace instantiated at: ${marketplaceInstance.contractAddress}`
     );
 
     // 6. Instantiate Liquidity Wrapper Contract
@@ -157,17 +157,17 @@ async function deploy() {
       },
       "Liquidity Wrapper v1",
       "auto",
-      { admin: account.address },
+      { admin: account.address }
     );
     config.contracts.liquidityWrapper.address = wrapperInstance.contractAddress;
     console.log(
-      `Liquidity Wrapper instantiated at: ${wrapperInstance.contractAddress}`,
+      `Liquidity Wrapper instantiated at: ${wrapperInstance.contractAddress}`
     );
 
     // Save deployment config
     writeFileSync(
       path.join(__dirname, `../config/deployment.${NETWORK}.json`),
-      JSON.stringify(config, null, 2),
+      JSON.stringify(config, null, 2)
     );
     console.log("Deployment config saved!");
 
@@ -176,7 +176,7 @@ async function deploy() {
     console.log("Marketplace:", config.contracts.marketplace.address);
     console.log(
       "Liquidity Wrapper:",
-      config.contracts.liquidityWrapper.address,
+      config.contracts.liquidityWrapper.address
     );
   } catch (error) {
     console.error("Deployment failed:", error);

@@ -5,7 +5,7 @@ import { Input } from '../components/shared/Input';
 import { Button } from '../components/shared/Button';
 import { useMarketplace } from '../hooks/useMarketplace';
 import { MarketplaceListing } from '../services/types';
-import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon } from '@heroicons/react/24/outline';
 
 export default function Marketplace() {
     const [listings, setListings] = useState<MarketplaceListing[]>([]);
@@ -60,7 +60,7 @@ export default function Marketplace() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full"
-                            icon={<MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />}
+
                         />
                     </div>
                     <div className="flex gap-4">
