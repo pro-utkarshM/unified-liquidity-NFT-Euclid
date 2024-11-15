@@ -1,5 +1,5 @@
 # Environment variables
-DOCKER_TAG := 0.15.2
+DOCKER_TAG := 0.15.0
 OPTIMIZER_IMAGE := cosmwasm/workspace-optimizer-arm64:$(DOCKER_TAG)
 
 # Paths

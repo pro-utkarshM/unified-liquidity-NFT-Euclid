@@ -1,9 +1,7 @@
-import { Uint128 } from "@cosmjs/cosmwasm-stargate";
-
 export interface LiquidityPosition {
   pool_id: string;
   token_pair: [string, string];
-  amount: Uint128;
+  amount: string;
   chain_id: string;
 }
 
@@ -18,6 +16,6 @@ export interface MarketplaceListing {
   listingId: string;
   tokenId: string;
   seller: string;
-  price: Uint128;
+  price: string;
   createdAt: number;
 }

@@ -53,8 +53,26 @@ export function useNFTContract() {
     }
   };
 
+  const queryNFT = async (tokenId: string): Promise<NFTMetadata> => {
+    if (!client) throw new Error("Client not initialized");
+
+    try {
+      const result = await client.queryContractSmart(
+        CONTRACT_ADDRESSES.UL_NFT,
+        {
+          get_token: { token_id: tokenId },
+        }
+      );
+      return result;
+    } catch (err) {
+      console.error("Query error:", err);
+      throw err;
+    }
+  };
+
   return {
     mintNFT,
+    queryNFT,
     getUserNFTs,
     loading,
     error,

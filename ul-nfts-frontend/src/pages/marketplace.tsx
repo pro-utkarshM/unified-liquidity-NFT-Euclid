@@ -15,6 +15,8 @@ export default function Marketplace() {
 
     const { getListings } = useMarketplace();
 
+
+
     const loadListings = async () => {
         try {
             const fetchedListings = await getListings();

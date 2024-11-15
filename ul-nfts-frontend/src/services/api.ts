@@ -1,5 +1,3 @@
-import { Uint128 } from "@cosmjs/cosmwasm-stargate";
-
 export class ApiService {
   private static baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
