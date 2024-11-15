@@ -4,8 +4,8 @@ use crate::state::{
     Config, LiquidityPosition, PositionInfo, CONFIG, PENDING_OPERATIONS, POOL_LIQUIDITY, POSITIONS,
 };
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order, Reply,
-    ReplyOn, Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
+    from_json, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Order, Reply, ReplyOn,
+    Response, StdError, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use schemars::JsonSchema;
@@ -79,7 +79,7 @@ pub fn execute(
 
 pub fn execute_add_liquidity(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     pool_id: String,
     chain_id: String,
@@ -114,15 +114,6 @@ pub fn execute_add_liquidity(
         payload: Binary::default(),
     };
 
-    // Create temporary position entry
-    let position = LiquidityPosition {
-        pool_id: pool_id.clone(),
-        chain_id,
-        token_pair,
-        amount,
-        last_updated: env.block.time.seconds(),
-    };
-
     // Add to pending operations
     PENDING_OPERATIONS.save(deps.storage, &pool_id, &vec![info.sender.to_string()])?;
 
@@ -135,7 +126,7 @@ pub fn execute_add_liquidity(
 
 pub fn execute_remove_liquidity(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     token_id: String,
     amount: Option<Uint128>,
@@ -190,11 +181,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetConfig {} => to_json_binary(&query_config(deps)?),
         QueryMsg::GetPosition { token_id } => to_json_binary(&query_position(deps, token_id)?),
-        QueryMsg::GetPoolPositions { pool_id } => to_json_binary(&query_pool_positions(deps, pool_id)?),
+        QueryMsg::GetPoolPositions { pool_id } => {
+            to_json_binary(&query_pool_positions(deps, pool_id)?)
+        }
         QueryMsg::GetPendingOperations { token_id } => {
             to_json_binary(&query_pending_operations(deps, token_id)?)
         }
-        QueryMsg::GetPoolLiquidity { pool_id } => to_json_binary(&query_pool_liquidity(deps, pool_id)?),
+        QueryMsg::GetPoolLiquidity { pool_id } => {
+            to_json_binary(&query_pool_liquidity(deps, pool_id)?)
+        }
         QueryMsg::EstimateRewards { token_id } => {
             to_json_binary(&query_estimate_rewards(deps, token_id)?)
         }
@@ -215,12 +210,37 @@ pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractEr
     }
 }
 
+// Helper function to safely extract data from Reply
+fn extract_reply_data(reply: Reply) -> StdResult<Binary> {
+    match reply.result {
+        cosmwasm_std::SubMsgResult::Ok(response) => {
+            // First try to get data from msg_responses (CosmWasm 2.0+)
+            if !response.msg_responses.is_empty() {
+                if let Some(first_response) = response.msg_responses.get(0) {
+                    return Ok(first_response.value.clone());
+                }
+            }
+
+            // If msg_responses is empty, try the deprecated data field
+            #[allow(deprecated)]
+            match response.data {
+                Some(data) => Ok(data),
+                None => Err(StdError::generic_err("No data found in response")),
+            }
+        }
+        cosmwasm_std::SubMsgResult::Err(err) => {
+            Err(StdError::generic_err(format!("Reply error: {}", err)))
+        }
+    }
+}
+
 fn handle_add_liquidity_reply(
     deps: DepsMut,
     env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
+    let data = extract_reply_data(msg)?;
+    let result: EuclidResponse = from_json(&data)?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
@@ -271,7 +291,8 @@ fn handle_remove_liquidity_reply(
     _env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
+    let data = extract_reply_data(msg)?;
+    let result: EuclidResponse = from_json(&data)?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
@@ -280,7 +301,7 @@ fn handle_remove_liquidity_reply(
     let remove_data: RemoveLiquidityResponse = from_json(&result.data)?;
     let position = POSITIONS.load(deps.storage, &remove_data.token_id)?;
 
-    /// ========= NEED TO FIX THIS =========
+    //  ========= NEED TO FIX THIS =========
     let temp_fix = position.position.pool_id.clone();
     // If all liquidity removed, delete position
     if remove_data.amount == position.position.amount {
@@ -308,7 +329,8 @@ fn handle_transfer_position_reply(
     _env: Env,
     msg: Reply,
 ) -> Result<Response, ContractError> {
-    let result: EuclidResponse = from_json(&msg.result.unwrap().data.unwrap())?;
+    let data = extract_reply_data(msg)?;
+    let result: EuclidResponse = from_json(&data)?;
 
     if !result.success {
         return Err(ContractError::CrossChainOperationFailed {});
@@ -393,7 +415,7 @@ fn query_estimate_rewards(deps: Deps, token_id: String) -> StdResult<Uint128> {
 
 pub fn execute_transfer_position(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     token_id: String,
     to_chain_id: String,
@@ -465,7 +487,7 @@ pub fn execute_update_position(
 
 pub fn execute_claim_rewards(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {

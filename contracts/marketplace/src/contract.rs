@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    coins, to_json_binary, Addr, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order,
-    Response, StdError, StdResult, Uint128, WasmMsg,
+    coins, to_json_binary, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Order,
+    Response, StdResult, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_storage_plus::Bound;
@@ -75,8 +75,6 @@ pub fn execute_list_nft(
         return Err(ContractError::AlreadyListed {});
     }
 
-    let config = CONFIG.load(deps.storage)?;
-
     // Create listing
     let listing = ListingInfo {
         seller: info.sender.clone(),
@@ -130,7 +128,7 @@ pub fn execute_cancel_listing(
 
 pub fn execute_buy_nft(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     token_id: String,
 ) -> Result<Response, ContractError> {

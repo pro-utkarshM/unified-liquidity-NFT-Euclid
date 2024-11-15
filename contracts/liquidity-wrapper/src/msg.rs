@@ -1,4 +1,3 @@
-use crate::state::LiquidityPosition;
 use cosmwasm_std::{Binary, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

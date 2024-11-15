@@ -4,5 +4,20 @@ wasm-debug = "build --target wasm32-unknown-unknown"
 
 [target.wasm32-unknown-unknown]
 rustflags = [
-  "-C", "link-arg=-s",
+    "-C",
+    "link-arg=-s",
+    "-C",
+    "link-arg=--export-table",
+    "-C",
+    "link-arg=--export=interface_version_8",
+    "-C",
+    "link-arg=--export=allocate",
+    "-C",
+    "link-arg=--export=deallocate",
+    "-C",
+    "link-arg=--export=requires_iterator",
+    "-C",
+    "link-args=--no-entry",
+    "-C",
+    "link-args=--import-memory",
 ]
