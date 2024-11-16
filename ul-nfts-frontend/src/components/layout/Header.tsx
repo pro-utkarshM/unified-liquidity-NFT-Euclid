@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Button } from '../shared/Button';
 import { useArchwayClient } from '../../hooks/useArchwayClient';
-import { WalletIcon, HomeIcon, ShoppingBagIcon, UserIcon } from '@heroicons/react/24/outline';
+import { FaWallet, FaHome, FaStore, FaUser } from 'react-icons/fa';
 
 export const Header = () => {
     const { address, connect } = useArchwayClient();
@@ -19,9 +19,9 @@ export const Header = () => {
     }, []);
 
     const navItems = [
-        { href: '/', label: 'Home', icon: HomeIcon },
-        { href: '/marketplace', label: 'Marketplace', icon: ShoppingBagIcon },
-        { href: '/portfolio', label: 'Portfolio', icon: UserIcon },
+        { href: '/', label: 'Home', icon: FaHome },
+        { href: '/marketplace', label: 'Marketplace', icon: FaStore },
+        { href: '/portfolio', label: 'Portfolio', icon: FaUser },
     ];
 
     return (
@@ -56,7 +56,7 @@ export const Header = () => {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                icon={<WalletIcon className="w-4 h-4" />}
+                                icon={<FaWallet className="w-4 h-4" />}
                             >
                                 {`${address.slice(0, 6)}...${address.slice(-4)}`}
                             </Button>
@@ -65,7 +65,7 @@ export const Header = () => {
                                 onClick={connect}
                                 variant="primary"
                                 size="sm"
-                                icon={<WalletIcon className="w-4 h-4" />}
+                                icon={<FaWallet className="w-4 h-4" />}
                             >
                                 Connect Wallet
                             </Button>

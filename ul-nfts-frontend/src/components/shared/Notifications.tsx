@@ -1,10 +1,18 @@
 import { useNotifications } from '../../hooks/useNotifications';
 import {
-    CheckCircleIcon,
-    XCircleIcon,
-    InformationCircleIcon,
-    ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+    FaCheckCircle,
+    FaTimesCircle,
+    FaInfoCircle,
+    FaExclamationCircle
+} from 'react-icons/fa';
+import { IoCloseCircleOutline } from 'react-icons/io5';
+
+interface Notification {
+    id: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    title?: string;
+    message: string;
+}
 
 export const Notifications = () => {
     const { notifications, removeNotification } = useNotifications();
@@ -12,13 +20,26 @@ export const Notifications = () => {
     const getIcon = (type: string) => {
         switch (type) {
             case 'success':
-                return <CheckCircleIcon className="h-6 w-6 text-green-400" />;
+                return <FaCheckCircle className="h-6 w-6 text-green-400" />;
             case 'error':
-                return <XCircleIcon className="h-6 w-6 text-red-400" />;
+                return <FaTimesCircle className="h-6 w-6 text-red-400" />;
             case 'warning':
-                return <ExclamationCircleIcon className="h-6 w-6 text-yellow-400" />;
+                return <FaExclamationCircle className="h-6 w-6 text-yellow-400" />;
             default:
-                return <InformationCircleIcon className="h-6 w-6 text-blue-400" />;
+                return <FaInfoCircle className="h-6 w-6 text-blue-400" />;
+        }
+    };
+
+    const getBorderColor = (type: string) => {
+        switch (type) {
+            case 'success':
+                return 'border-green-400';
+            case 'error':
+                return 'border-red-400';
+            case 'warning':
+                return 'border-yellow-400';
+            default:
+                return 'border-blue-400';
         }
     };
 
@@ -26,17 +47,16 @@ export const Notifications = () => {
 
     return (
         <div className="fixed bottom-4 right-4 z-50 space-y-4">
-            {notifications.map((notification) => (
+            {notifications.map((notification: Notification) => (
                 <div
                     key={notification.id}
                     className={`
-            max-w-sm w-full bg-dark-light rounded-lg shadow-lg
-            border-l-4 p-4
-            ${notification.type === 'success' && 'border-green-400'}
-            ${notification.type === 'error' && 'border-red-400'}
-            ${notification.type === 'warning' && 'border-yellow-400'}
-            ${notification.type === 'info' && 'border-blue-400'}
-          `}
+                        max-w-sm w-full bg-dark-light rounded-lg shadow-lg
+                        border-l-4 p-4
+                        ${getBorderColor(notification.type)}
+                        transform transition-all duration-300 hover:scale-102
+                    `}
+                    role="alert"
                 >
                     <div className="flex items-start">
                         <div className="flex-shrink-0">
@@ -52,14 +72,16 @@ export const Notifications = () => {
                                 {notification.message}
                             </p>
                         </div>
-                        <div className="ml-4 flex-shrink-0 flex">
-                            <button
-                                className="bg-transparent text-gray-400 hover:text-gray-200"
-                                onClick={() => removeNotification(notification.id)}
-                            >
-                                <XCircleIcon className="h-5 w-5" />
-                            </button>
-                        </div>
+                        <button
+                            className="ml-4 flex-shrink-0 inline-flex text-gray-400 
+                                     hover:text-gray-200 focus:outline-none 
+                                     focus:ring-2 focus:ring-offset-2 focus:ring-primary 
+                                     transition-colors duration-200"
+                            onClick={() => removeNotification(notification.id)}
+                            aria-label="Close notification"
+                        >
+                            <IoCloseCircleOutline className="h-5 w-5" />
+                        </button>
                     </div>
                 </div>
             ))}

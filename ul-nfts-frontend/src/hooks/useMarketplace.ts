@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-nocheck
 import { useState } from "react";
 import { useArchwayClient } from "./useArchwayClient";
 import { CONTRACT_ADDRESSES } from "../services/contracts";

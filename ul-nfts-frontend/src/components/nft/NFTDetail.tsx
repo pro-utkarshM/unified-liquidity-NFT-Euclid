@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NFTMetadata } from '../../services/types';
 import { Button } from '../shared/Button';
 import { ListingForm } from '../marketplace/ListingForm';
-import { useMarketplace } from '../../hooks/useMarketplace';
+// import { useMarketplace } from '../../hooks/useMarketplace';
 import { useArchwayClient } from '../../hooks/useArchwayClient';
 
 interface NFTDetailProps {
@@ -12,7 +12,7 @@ interface NFTDetailProps {
 
 export const NFTDetail: React.FC<NFTDetailProps> = ({ nft, onListingCreated }) => {
     const { address } = useArchwayClient();
-    const { loading: marketplaceLoading } = useMarketplace();
+    // const { loading: marketplaceLoading } = useMarketplace();
     const [showListingForm, setShowListingForm] = useState(false);
 
     const isOwner = address === nft.owner;

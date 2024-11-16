@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-nocheck
 import { SigningArchwayClient } from "@archwayhq/arch3.js";
 import { useCallback, useState } from "react";
 import { CHAIN_CONFIG } from "../services/contracts";

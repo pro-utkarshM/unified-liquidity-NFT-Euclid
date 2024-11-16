@@ -1,32 +1,43 @@
-import { useEffect, useState } from "react";
-import { notificationService } from "../services/notifications";
+import { useState } from "react";
 
-export function useNotifications() {
+interface Notification {
+  id: string;
+  type: "success" | "error" | "warning" | "info";
+  title?: string;
+  message: string;
+  duration?: number;
+}
+
+export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  useEffect(() => {
-    const unsubscribe = notificationService.subscribe((notification) => {
-      setNotifications((prev) => [...prev, notification]);
+  const addNotification = (notification: Omit<Notification, "id">) => {
+    const id = Math.random().toString(36).substring(2);
+    const newNotification = {
+      ...notification,
+      id,
+      duration: notification.duration ?? 5000,
+    };
 
-      // Auto-remove notification after duration
-      if (notification.duration) {
-        setTimeout(() => {
-          setNotifications((prev) =>
-            prev.filter((n) => n.id !== notification.id)
-          );
-        }, notification.duration);
-      }
-    });
+    setNotifications((prev) => [...prev, newNotification]);
 
-    return unsubscribe;
-  }, []);
+    // Auto remove after duration
+    if (newNotification.duration > 0) {
+      setTimeout(() => {
+        removeNotification(id);
+      }, newNotification.duration);
+    }
+  };
 
   const removeNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
   };
 
   return {
     notifications,
+    addNotification,
     removeNotification,
   };
-}
+};

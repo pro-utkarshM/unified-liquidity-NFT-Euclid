@@ -1,32 +1,58 @@
+// import { useEffect, useState } from 'react';
+// import { Layout } from '../components/layout/Layout';
+// import { NFTGrid } from '../components/nft/NFTGrid';
+// import { Button } from '../components/shared/Button';
+// import { useNFTContract } from '../hooks/useNFTContract';
+// import { NFTMetadata } from '../services/types';
+// import { useRouter } from 'next/router';
+
+// export default function Home() {
+//   const [featuredNFTs, setFeaturedNFTs] = useState<NFTMetadata[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const router = useRouter();
+//   const { getUserNFTs } = useNFTContract();
+
+//   useEffect(() => {
+//     const loadFeaturedNFTs = async () => {
+//       try {
+//         // In a real app, you might want to fetch specifically featured/trending NFTs
+//         const nfts = await getUserNFTs('featured');
+//         setFeaturedNFTs(nfts.slice(0, 6)); // Show only top 6
+//       } catch (error) {
+//         console.error('Failed to load featured NFTs:', error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     loadFeaturedNFTs();
+//   }, []);
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-nocheck
 import { useEffect, useState } from 'react';
 import { Layout } from '../components/layout/Layout';
 import { NFTGrid } from '../components/nft/NFTGrid';
 import { Button } from '../components/shared/Button';
-import { useNFTContract } from '../hooks/useNFTContract';
-import { NFTMetadata } from '../services/types';
+import { NFTS, TRENDING_POOLS } from '../services/Data';
 import { useRouter } from 'next/router';
+import { FaChartLine, FaLock, FaExchangeAlt, FaSyncAlt } from 'react-icons/fa';
 
 export default function Home() {
-  const [featuredNFTs, setFeaturedNFTs] = useState<NFTMetadata[]>([]);
+  const [featuredNFTs, setFeaturedNFTs] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { getUserNFTs } = useNFTContract();
 
   useEffect(() => {
-    const loadFeaturedNFTs = async () => {
-      try {
-        // In a real app, you might want to fetch specifically featured/trending NFTs
-        const nfts = await getUserNFTs('featured');
-        setFeaturedNFTs(nfts.slice(0, 6)); // Show only top 6
-      } catch (error) {
-        console.error('Failed to load featured NFTs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setFeaturedNFTs(NFTS);
+      setLoading(false);
+    }, 1500);
 
-    loadFeaturedNFTs();
+    return () => clearTimeout(timer);
   }, []);
+
 
   return (
     <Layout>
@@ -62,6 +88,104 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Stats Section */}
+      {/* <section className="py-12 bg-dark-light">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((stat, idx) => (
+              <div key={idx} className="text-center">
+                <div className="text-3xl font-bold text-gradient mb-2">{stat.value}</div>
+                <div className="text-gray-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section> */}
+
+      {/* Featured Pools Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold">Trending Pools</h2>
+          <p className="mt-2 text-gray-400">Most popular liquidity positions</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TRENDING_POOLS.map((pool) => (
+            <div key={pool.id} className="bg-dark-light rounded-lg p-6 hover:shadow-xl transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">{pool.name}</h3>
+                <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm">
+                  {pool.apy} APY
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TVL</span>
+                  <span className="text-white">{pool.tvl}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">24h Volume</span>
+                  <span className="text-white">{pool.volume24h}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Chains</span>
+                  <span className="text-white">{pool.chains.join(', ')}</span>
+                </div>
+              </div>
+
+              <button
+                className="w-full mt-4 bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded"
+                onClick={() => router.push('/marketplace')}
+              >
+                View Details
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-16 bg-dark">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Choose UL-NFTs?</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaChartLine className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Enhanced Yields</h3>
+              <p className="text-gray-400">Access optimal yields across multiple chains automatically</p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaLock className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Secure & Audited</h3>
+              <p className="text-gray-400">Built on battle-tested protocols with multiple security layers</p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaExchangeAlt className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Easy Trading</h3>
+              <p className="text-gray-400">Trade complex positions with a single click</p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaSyncAlt className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Auto-Rebalancing</h3>
+              <p className="text-gray-400">Positions automatically adjust for optimal performance</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Featured NFTs Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

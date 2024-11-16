@@ -13,7 +13,7 @@ export class ApiService {
     return response.json();
   }
 
-  static async estimateGas(operation: string, params: any) {
+  static async estimateGas(operation: string, params: unknown) {
     const response = await fetch(`${this.baseUrl}/estimate-gas`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
